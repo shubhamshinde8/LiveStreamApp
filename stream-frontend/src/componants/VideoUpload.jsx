@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 
 import videoLogo from "../assets/video-posting.png";
-import { ButtonGroup, Card, Label , FileInput, TextInput, Textarea, Progress} from "flowbite-react";
+import { ButtonGroup, Card, Label , FileInput, TextInput, Textarea, Progress, Alert} from "flowbite-react";
 import { Button } from "flowbite-react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 
 
@@ -53,6 +54,16 @@ const [message, setMessage] = useState("");
     saveVideoToServer(selectedFile,meta);
   }
 
+  function resetForm(){
+    setMeta({
+      title:"",
+      description:"",
+    });
+    setSelectedFile(null);
+    setUploading(false);
+    // setMessage("")
+  }
+
   async function saveVideoToServer(video,videoMataData){
     setUploading(true);
 
@@ -71,14 +82,24 @@ const [message, setMessage] = useState("");
           'Content-Type':'multipart/form-data'
         },
         onUploadProgress:(progressEvent)=>{
-          console.log(progressEvent);
+          const progress=Math.round((progressEvent.loaded*100)/progressEvent.total)
+          console.log(progress);
+          setProgress((progress));
         }
       })
       console.log(response);
+      setProgress(0);
       
       setMessage("File Uploaded..")
+      setUploading(false);
+      toast.success("File uploaded successfully ! ")
+      resetForm();
+
     }catch (error){
-      console.log(error);
+      console.log(error); 
+      setMessage(" error in uploading file")
+      setUploading(false);
+      toast.error("File not uploaded.. ! ")
     }
   }
 
@@ -92,14 +113,14 @@ const [message, setMessage] = useState("");
       <div className="mb-2 block " >
         <Label htmlFor="file-upload" value="Video Title " />
       </div>
-      <TextInput onChange={formFieldChange}  name="title"  placeholder="text here" />
+      <TextInput value={meta.title} onChange={formFieldChange}  name="title"  placeholder="text here" />
     </div>
 
     <div className="max-w-md">
       <div className="mb-2 block">
         <Label htmlFor="comment" value="Video Desciption" />
       </div>
-      <Textarea onChange={formFieldChange} name="description" id="comment" placeholder="Write video description.." required rows={4} />
+      <Textarea value={meta.description} onChange={formFieldChange} name="description" id="comment" placeholder="Write video description.." required rows={4} />
     </div>
       <div className="flex items-center space-x-5 justify-center">
   <div className="shrink-0">
@@ -118,8 +139,34 @@ const [message, setMessage] = useState("");
     "/>
   </label>
   </div>
+
+  <div className=" ">
+  {
+    uploading && (
+    <Progress
+   hiddenn={uploading}
+   progress={progress}
+   textLabel="uploading" 
+   size="lg" 
+   labelProgress 
+   labelText />
+ ) }
+  </div>
+
+  <div className="">
+    {message && (
+      <Alert color={"success"} onDismiss={()=>{
+        setMessage(""); 
+      }}>
+        <span className="font-medium">Success Alert</span>
+        {message}
+        </Alert>
+    )}
+  </div>
+
+
   <div className="flex justify-center">
-    <Button type="submit">Submit</Button>
+    <Button disabled={uploading} type="submit">Submit</Button>
   </div>
 </form>
     </div>
